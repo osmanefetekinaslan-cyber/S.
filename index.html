@@ -316,6 +316,13 @@
     position: relative;
   }
 
+  #ytPlayer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
   .yt-frame-wrap iframe {
     position: absolute;
     inset: 0;
@@ -408,18 +415,7 @@
 <section id="youtube-section">
   <h2 class="yt-heading">— Video —</h2>
   <div class="yt-frame-wrap">
-    <!--
-      Video 6:45 (405 saniye) noktasından itibaren otomatik oynatılır.
-      autoplay=1&mute=1 tarayıcı politikalarına uyum için gereklidir.
-      start=405 → 6*60 + 45 = 405
-    -->
-    <iframe
-      id="ytPlayer"
-      src="https://www.youtube.com/embed/FuDbG88n5RY?start=405&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1"
-      allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-      allowfullscreen
-      title="Video"
-    ></iframe>
+    <div id="ytPlayer"></div>
   </div>
   <p class="yt-note">Video 6:45'ten itibaren oynatılır</p>
 </section>
@@ -1858,5 +1854,56 @@
   } else init();
 })();
 </script>
+
+<!-- YouTube IFrame API: Site içinde, 6:45'ten başlatır -->
+<script>
+(function () {
+  const START_SECONDS = 405; // 6:45
+  let player = null;
+
+  function createPlayer() {
+    if (!window.YT || !window.YT.Player) return;
+    if (player) return;
+
+    const origin = (location.protocol === 'http:' || location.protocol === 'https:')
+      ? location.origin
+      : undefined;
+
+    const playerVars = {
+      autoplay: 1,
+      mute: 1,
+      start: START_SECONDS,
+      rel: 0,
+      modestbranding: 1,
+      playsinline: 1,
+      enablejsapi: 1
+    };
+
+    if (origin) playerVars.origin = origin;
+
+    player = new YT.Player('ytPlayer', {
+      videoId: 'FuDbG88n5RY',
+      playerVars: playerVars,
+      events: {
+        onReady: function (event) {
+          event.target.seekTo(START_SECONDS, true);
+          event.target.playVideo();
+        }
+      }
+    });
+  }
+
+  window.onYouTubeIframeAPIReady = createPlayer;
+
+  if (window.YT && window.YT.Player) {
+    createPlayer();
+  } else {
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
+  }
+})();
+</script>
+
 </body>
 </html>
